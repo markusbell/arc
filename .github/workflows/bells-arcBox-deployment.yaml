@@ -242,27 +242,46 @@ jobs:
         if: github.event.inputs.mechanism == 'ARM'
         with:
           inlineScript: |
-            az group create --name ${{ github.event.inputs.resourceGroupName }} --location ${{ github.event.inputs.location }}
-            az deployment group create -g  ${{ github.event.inputs.resourceGroupName }} -f "azure_jumpstart_arcbox/ARM/azuredeploy.json" -p sshRSAPublicKey='${{secrets.SSH_RSA_PUBLIC_KEY}}' spnClientId=${{secrets.SPN_CLIENT_ID}} spnClientSecret=${{secrets.SPN_CLIENT_SECRET}} spnTenantId=${{secrets.SPN_TENANT_ID}} windowsAdminUsername=${{ github.event.inputs.windowsAdminUsername }} windowsAdminPassword=${{secrets.WINDOWS_ADMIN_PASSWORD}} logAnalyticsWorkspaceName=${{ github.event.inputs.logAnalyticsWorkspaceName }} flavor=${{ github.event.inputs.flavor }} githubAccount="${GITHUB_REPOSITORY_OWNER}" githubBranch=${{github.event.inputs.githubBranch}} deployBastion=${{github.event.inputs.deployBastion}}
+            az group create --name $RG_NAME --location $LOCATION
+            az deployment group create -g $RG_NAME -f "azure_jumpstart_arcbox/ARM/azuredeploy.json" \
+              -p sshRSAPublicKey="$SSH_RSA_PUBLIC_KEY" \
+              spnClientId="$SPN_CLIENT_ID" \
+              spnClientSecret="$SPN_CLIENT_SECRET" \
+              spnTenantId="$SPN_TENANT_ID" \
+              windowsAdminUsername="$WINDOWS_ADMIN_USER" \
+              windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
+              logAnalyticsWorkspaceName="${RG_NAME}la" \
+              flavor="$FLAVOR" \
+              githubAccount="${GITHUB_REPOSITORY_OWNER}" \
+              githubBranch="$GITHUB_BRANCH" \
+              deployBastion="$DEPLOY_BASTION"
       - name: Deploy ArcBox - Bicep
         uses: Azure/cli@v1.0.6
         if: github.event.inputs.mechanism == 'Bicep'
         with:
           inlineScript: |
-            az group create --name ${{ github.event.inputs.resourceGroupName }} --location ${{ github.event.inputs.location }}
-            az deployment group create -g  ${{ github.event.inputs.resourceGroupName }} -f "azure_jumpstart_arcbox/bicep/main.bicep" -p sshRSAPublicKey='${{secrets.SSH_RSA_PUBLIC_KEY}}' spnClientId=${{secrets.SPN_CLIENT_ID}} spnClientSecret=${{secrets.SPN_CLIENT_SECRET}} spnTenantId=${{secrets.SPN_TENANT_ID}} windowsAdminUsername=${{ github.event.inputs.windowsAdminUsername }} windowsAdminPassword=${{secrets.WINDOWS_ADMIN_PASSWORD}} logAnalyticsWorkspaceName=${{ github.event.inputs.logAnalyticsWorkspaceName }} flavor=${{ github.event.inputs.flavor }} githubAccount="${GITHUB_REPOSITORY_OWNER}" githubBranch=${{github.event.inputs.githubBranch}} deployBastion=${{github.event.inputs.deployBastion}}
+            az group create --name $RG_NAME --location $LOCATION
+            az deployment group create -g $RG_NAME -f "azure_jumpstart_arcbox/bicep/main.bicep" \
+              -p sshRSAPublicKey="$SSH_RSA_PUBLIC_KEY" \
+              spnClientId="$SPN_CLIENT_ID" \
+              spnClientSecret="$SPN_CLIENT_SECRET" \
+              spnTenantId="$SPN_TENANT_ID" \
+              windowsAdminUsername="$WINDOWS_ADMIN_USER" \
+              windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
+              logAnalyticsWorkspaceName="${RG_NAME}la" \
+              flavor="$FLAVOR" \
+              githubAccount="${GITHUB_REPOSITORY_OWNER}" \
+              githubBranch="$GITHUB_BRANCH" \
+              deployBastion="$DEPLOY_BASTION"
       - name: Deploy ArcBox - Terraform
         if: github.event.inputs.mechanism == 'Terraform'
         run: |
           chmod +x ./tests/TerraformDeploy.sh
+          chmod +x ./tests/TerraformDeploy.sh
           ./tests/TerraformDeploy.sh ./azure_jumpstart_arcbox/terraform \
-                 "${{ github.event.inputs.resourceGroupName }}"  "${{ github.event.inputs.location }}" \
-                 "${{secrets.SPN_CLIENT_ID}}" "${{secrets.SPN_CLIENT_SECRET}}" "${{secrets.SPN_TENANT_ID}}" \
-                 "${{secrets.SSH_RSA_PUBLIC_KEY}}" "${{ github.event.inputs.windowsAdminUsername }}" \
-                 "${{secrets.WINDOWS_ADMIN_PASSWORD}}" "${{ github.event.inputs.flavor }}" \
-                 "${{ github.event.inputs.logAnalyticsWorkspaceName }}" "${GITHUB_REPOSITORY_OWNER}" \
-                 "${{ github.event.inputs.githubBranch }}" "${{ github.event.inputs.deployBastion }}" \
-                 "${{secrets.SPN_SUBSCRIPTION_ID}}"
+            "$RG_NAME" "$LOCATION" "$SPN_CLIENT_ID" "$SPN_CLIENT_SECRET" "$SPN_TENANT_ID" \
+            "$SSH_RSA_PUBLIC_KEY" "$WINDOWS_ADMIN_USER" "$WINDOWS_ADMIN_PASSWORD" \
+            "$FLAVOR" "${RG_NAME}la" "${GITHUB_REPOSITORY_OWNER}" "$GITHUB_BRANCH" "$DEPLOY_BASTION" "$SPN_SUBSCRIPTION_ID"
       - name: Add NSG Rule to open our SSH Port (2204) and Run Command requires connectivity to Azure public IP addresses
         uses: Azure/cli@v1.0.6
         with:
