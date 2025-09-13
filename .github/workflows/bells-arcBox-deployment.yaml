@@ -1,122 +1,110 @@
-name: Manual ArcBox Execution with parameters
+name: ArcBox Automated Deployment
+
 on:
-  workflow_dispatch:
-    inputs:
-      flavor:
-        type: choice
-        description: "ArcBox flavor to deploy"
-        required: true
-        options:
-          - ITPro
-          - DevOps
-          - Full
-      mechanism:
-        type: choice
-        description: "Deployment option"
-        required: true
-        options:
-          - ARM
-          - Bicep
-          - Terraform
-      githubBranch:
-        description: "Repo branch where the scripts are located"
-        required: true
-        default: "main"
-      resourceGroupName:
-        description: "Resource group name"
-        required: true
-        default: "arcbox-test-rg"
-      location:
-        description: "Resource group location"
-        required: true
-        default: "westus2"
-      logAnalyticsWorkspaceName:
-        description: "Analytics Workspace name"
-        required: true
-        default: "MyAnalyticsWorkspace123"
-      windowsAdminUsername:
-        description: "Windows admin username"
-        required: true
-        default: "arcdemo"
-      deployBastion:
-        type: boolean
-        description: "Deploy Bastion?"
-        required: true
-        default: false
+  push:
+    branches:
+      - main
+
+env:
+  AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+  WINDOWS_ADMIN_PASSWORD: ${{ secrets.WINDOWS_ADMIN_PASSWORD }}
+  SSH_RSA_PUBLIC_KEY: ${{ secrets.SSH_RSA_PUBLIC_KEY }}
+  FLAVOR: ITPro        # Standardwert; kann auf DevOps oder Full angepasst werden
+  DEPLOY_BASTION: false # Standardwert; true/false je nach Bedarf
+  RG_NAME: arcbox-test-rg
+  LOCATION: westus2
+  WINDOWS_ADMIN_USER: arcdemo
+  GITHUB_BRANCH: main
+  GITHUB_ACCOUNT: ${{ github.repository_owner }}
 
 jobs:
   deployArcBox:
     runs-on: ubuntu-latest
-    env:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      SPN_CLIENT_ID: ${{ secrets.SPN_CLIENT_ID }}
-      SPN_CLIENT_SECRET: ${{ secrets.SPN_CLIENT_SECRET }}
-      SPN_TENANT_ID: ${{ secrets.SPN_TENANT_ID }}
-      SPN_SUBSCRIPTION_ID: ${{ secrets.SPN_SUBSCRIPTION_ID }}
-      WINDOWS_ADMIN_PASSWORD: ${{ secrets.WINDOWS_ADMIN_PASSWORD }}
-      SSH_RSA_PUBLIC_KEY: ${{ secrets.SSH_RSA_PUBLIC_KEY }}
-      RG_NAME: ${{ github.event.inputs.resourceGroupName }}
-      LOCATION: ${{ github.event.inputs.location }}
-      WINDOWS_ADMIN_USER: ${{ github.event.inputs.windowsAdminUsername }}
-      DEPLOY_BASTION: ${{ github.event.inputs.deployBastion }}
-      FLAVOR: ${{ github.event.inputs.flavor }}
-      MECHANISM: ${{ github.event.inputs.mechanism }}
-      GITHUB_BRANCH: ${{ github.event.inputs.githubBranch }}
 
     steps:
-      - name: Checkout Repository
+      - name: Check out repository
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.inputs.githubBranch }}
+          ref: ${{ github.ref }}
 
       - name: Azure Login
         uses: Azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # --- ARM Deployment ---
       - name: Deploy ArcBox - ARM
-        if: ${{ github.event.inputs.mechanism == 'ARM' }}
         uses: Azure/cli@v1
+        if: env.FLAVOR != ''
         with:
           inlineScript: |
             az group create --name $RG_NAME --location $LOCATION
             az deployment group create -g $RG_NAME -f "azure_jumpstart_arcbox/ARM/azuredeploy.json" \
               -p sshRSAPublicKey="$SSH_RSA_PUBLIC_KEY" \
-              spnClientId="$SPN_CLIENT_ID" \
-              spnClientSecret="$SPN_CLIENT_SECRET" \
-              spnTenantId="$SPN_TENANT_ID" \
-              windowsAdminUsername="$WINDOWS_ADMIN_USER" \
-              windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
-              logAnalyticsWorkspaceName="${RG_NAME}la" \
-              flavor="$FLAVOR" \
-              githubAccount="${GITHUB_REPOSITORY_OWNER}" \
-              githubBranch="$GITHUB_BRANCH" \
-              deployBastion="$DEPLOY_BASTION"
+                 windowsAdminUsername="$WINDOWS_ADMIN_USER" \
+                 windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
+                 logAnalyticsWorkspaceName="${RG_NAME}la" \
+                 flavor="$FLAVOR" \
+                 githubAccount="$GITHUB_ACCOUNT" \
+                 githubBranch="$GITHUB_BRANCH" \
+                 deployBastion="$DEPLOY_BASTION"
 
+      # --- Bicep Deployment ---
       - name: Deploy ArcBox - Bicep
-        if: ${{ github.event.inputs.mechanism == 'Bicep' }}
         uses: Azure/cli@v1
+        if: env.FLAVOR != ''
         with:
           inlineScript: |
             az group create --name $RG_NAME --location $LOCATION
             az deployment group create -g $RG_NAME -f "azure_jumpstart_arcbox/bicep/main.bicep" \
               -p sshRSAPublicKey="$SSH_RSA_PUBLIC_KEY" \
-              spnClientId="$SPN_CLIENT_ID" \
-              spnClientSecret="$SPN_CLIENT_SECRET" \
-              spnTenantId="$SPN_TENANT_ID" \
-              windowsAdminUsername="$WINDOWS_ADMIN_USER" \
-              windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
-              logAnalyticsWorkspaceName="${RG_NAME}la" \
-              flavor="$FLAVOR" \
-              githubAccount="${GITHUB_REPOSITORY_OWNER}" \
-              githubBranch="$GITHUB_BRANCH" \
-              deployBastion="$DEPLOY_BASTION"
+                 windowsAdminUsername="$WINDOWS_ADMIN_USER" \
+                 windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
+                 logAnalyticsWorkspaceName="${RG_NAME}la" \
+                 flavor="$FLAVOR" \
+                 githubAccount="$GITHUB_ACCOUNT" \
+                 githubBranch="$GITHUB_BRANCH" \
+                 deployBastion="$DEPLOY_BASTION"
 
+      # --- Terraform Deployment ---
       - name: Deploy ArcBox - Terraform
-        if: ${{ github.event.inputs.mechanism == 'Terraform' }}
         run: |
           chmod +x ./tests/TerraformDeploy.sh
           ./tests/TerraformDeploy.sh ./azure_jumpstart_arcbox/terraform \
-            "$RG_NAME" "$LOCATION" "$SPN_CLIENT_ID" "$SPN_CLIENT_SECRET" "$SPN_TENANT_ID" \
-            "$SSH_RSA_PUBLIC_KEY" "$WINDOWS_ADMIN_USER" "$WINDOWS_ADMIN_PASSWORD" \
-            "$FLAVOR" "${RG_NAME}la" "${GITHUB_REPOSITORY_OWNER}" "$GITHUB_BRANCH" "$DEPLOY_BASTION" "$SPN_SUBSCRIPTION_ID"
+            "$RG_NAME" "$LOCATION" "$WINDOWS_ADMIN_USER" "$WINDOWS_ADMIN_PASSWORD" \
+            "$FLAVOR" "${RG_NAME}la" "$GITHUB_ACCOUNT" "$GITHUB_BRANCH" "$DEPLOY_BASTION" "${{ secrets.SPN_SUBSCRIPTION_ID }}"
+
+      # --- Wait for VM readiness ---
+      - name: Wait for VM
+        run: sleep 120 # optional, je nach VM-Größe anpassen
+
+      # --- SSH/PowerShell Script Execution ---
+      - name: Setup SSH Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install putty-tools sshpass
+
+      - name: Connect VM and Execute Scripts
+        run: |
+          VM_IP=$(az vm show -d -g $RG_NAME -n ArcBox-Client --query publicIps -o tsv)
+          plink -ssh -P 2204 $WINDOWS_ADMIN_USER@$VM_IP -pw "$WINDOWS_ADMIN_PASSWORD" -batch 'powershell -InputFormat None -F C:\ArcBox\GHActionDeploy.ps1'
+
+      # --- Upload logs from VM ---
+      - name: Download logs
+        run: |
+          chmod +x ./tests/DownloadLogs.sh
+          ./tests/DownloadLogs.sh $WINDOWS_ADMIN_USER $RG_NAME $FLAVOR "$WINDOWS_ADMIN_PASSWORD"
+
+      - name: Upload LogsBundle.zip
+        uses: actions/upload-artifact@v3
+        with:
+          name: LogsBundle.zip
+          path: LogsBundle.zip
+
+      # --- Cleanup ---
+      - name: Delete Resource Group
+        if: success() || failure()
+        uses: Azure/cli@v1
+        with:
+          inlineScript: |
+            az group delete -n $RG_NAME -y --no-wait
