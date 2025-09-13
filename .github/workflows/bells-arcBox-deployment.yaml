@@ -60,7 +60,7 @@ jobs:
       GITHUB_BRANCH: main
       RG_NAME: ${{ secrets.AZURE_RESOURCEGROUP }}
       LOCATION: ${{ secrets.AZURE_LOCATION }}
-      LOG_ANALYTICS: ${{ toLower(env.SUBCRIPTION_SHORTNAME)}}${{ toLower(env.LOCATION_ID) }}${{ toLower(env.ARC_NAME) }}${{ 'la' }}
+      LOG_ANALYTICS: ${{ toLower(secrets.SUBCRIPTION_SHORTNAME)}}${{ toLower(secrets.LOCATION_ID) }}${{ toLower(secrets.ARC_NAME) }}${{ 'la' }}
       WINDOWS_ADMIN_USER: bellsadmin
       DEPLOY_BASTION: false
   BashScriptAnalyzerTool:
