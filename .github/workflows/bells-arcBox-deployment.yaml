@@ -83,24 +83,6 @@ jobs:
           echo "LOG_ANALYTICS=${SUBS_LC}${LOCATION_LC}${ARC_LC}la" >> $GITHUB_ENV
           echo "DEPLOYMENT_NAME=${LOCATION_LC}${SUBS_LC}${ARC_LC}${FLAVOR_LC}" >> $GITHUB_ENV
           echo "RG_NAME=${LOCATION_LC}${SUBS_LC}" >> $GITHUB_ENV
-      - name: Deploy ArcBox - ARM Example
-        if: ${{ github.event.inputs.mechanism == 'ARM' }}
-        uses: Azure/cli@v1
-        with:
-          inlineScript: |
-            az group create --name $RG_NAME --location $LOCATION
-            az deployment group create -g $RG_NAME -f "azure_jumpstart_arcbox/ARM/azuredeploy.json" \
-              -p sshRSAPublicKey="${{ secrets.SSH_RSA_PUBLIC_KEY }}" \
-              spnClientId="${{ secrets.SPN_CLIENT_ID }}" \
-              spnClientSecret="${{ secrets.SPN_CLIENT_SECRET }}" \
-              spnTenantId="${{ secrets.SPN_TENANT_ID }}" \
-              windowsAdminUsername="${{ github.event.inputs.windowsAdminUsername }}" \
-              windowsAdminPassword="${{ secrets.WINDOWS_ADMIN_PASSWORD }}" \
-              logAnalyticsWorkspaceName="$LOG_ANALYTICS" \
-              flavor="$FLAVOR" \
-              githubAccount="${GITHUB_REPOSITORY_OWNER}" \
-              githubBranch="${{ github.event.inputs.githubBranch }}" \
-              deployBastion="${{ github.event.inputs.deployBastion }}"
       - name: Validate Bash Script
         run: |
           chmod +x ./tests/BashStaticCheck.sh
