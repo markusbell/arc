@@ -58,7 +58,7 @@ jobs:
               -p sshRSAPublicKey="$SSH_RSA_PUBLIC_KEY" \
                  windowsAdminUsername="$WINDOWS_ADMIN_USER" \
                  windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
-                 logAnalyticsWorkspaceName="${SUBSCRIPTION_SHORTNAME}${LOCATION_ID}${ARC_NAME}la" \
+                 logAnalyticsWorkspaceName="${SUBSCRIPTION_SHORTNAME}-${LOCATION_ID}-${ARC_NAME}-LA" \
                  flavor="$FLAVOR" \
                  githubAccount="${GITHUB_REPOSITORY_OWNER}" \
                  githubBranch="${GITHUB_REF##*/}" \
@@ -74,7 +74,7 @@ jobs:
               -p sshRSAPublicKey="$SSH_RSA_PUBLIC_KEY" \
                  windowsAdminUsername="$WINDOWS_ADMIN_USER" \
                  windowsAdminPassword="$WINDOWS_ADMIN_PASSWORD" \
-                 logAnalyticsWorkspaceName="${SUBSCRIPTION_SHORTNAME}${LOCATION_ID}${ARC_NAME}la" \
+                 logAnalyticsWorkspaceName="${SUBSCRIPTION_SHORTNAME}-${LOCATION_ID}-${ARC_NAME}-LA" \
                  flavor="$FLAVOR" \
                  githubAccount="${GITHUB_REPOSITORY_OWNER}" \
                  githubBranch="${GITHUB_REF##*/}" \
