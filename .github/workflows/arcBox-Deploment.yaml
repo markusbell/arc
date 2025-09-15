@@ -116,5 +116,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ArcBox-Logs
-          path: ./azure_jumpstart_arcbox/logs/**
+          path: ./azure_jumpstart_arcbox/artifacts/**
           if-no-files-found: error
+
+      - name: Upload bootstrap script
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap
+          path: ./azure_jumpstart_arcbox/artifacts/Bootstrap.ps1
