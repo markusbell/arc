@@ -85,7 +85,7 @@
     },
     "githubAccount": {
       "type": "string",
-      "defaultValue": "microsoft",
+      "defaultValue": "markusbell",
       "metadata": {
         "description": "Target GitHub account"
       }
@@ -216,7 +216,7 @@
     }
   },
   "variables": {
-    "templateBaseUrl": "[format('https://raw.githubusercontent.com/{0}/azure_arc/{1}/azure_jumpstart_arcbox/', parameters('githubAccount'), parameters('githubBranch'))]",
+    "templateBaseUrl": "[format('https://raw.githubusercontent.com/{0}/arc/{1}/azure_jumpstart_arcbox/', parameters('githubAccount'), parameters('githubBranch'))]",
     "aksArcDataClusterName": "[format('{0}-AKS-Data-{1}', parameters('namingPrefix'), parameters('guid'))]",
     "aksDrArcDataClusterName": "[format('{0}-AKS-DR-Data-{1}', parameters('namingPrefix'), parameters('guid'))]",
     "k3sArcDataClusterName": "[format('{0}-K3s-Data-{1}', parameters('namingPrefix'), parameters('guid'))]",
